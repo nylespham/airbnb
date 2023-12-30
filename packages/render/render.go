@@ -10,7 +10,7 @@ import (
 func RenderTemplate(w http.ResponseWriter, tmpl string) {
 	const data = "nylespham"
 	filePrefix, _ := filepath.Abs("../../templates/")
-	parsedTemplate, err := template.ParseFiles(filePrefix + tmpl + ".html")
+	parsedTemplate, err := template.ParseFiles(filePrefix+tmpl, filePrefix+"/base.layout.tmpl")
 	if err != nil {
 		fmt.Println("error parsing template:", err)
 	}

@@ -6,10 +6,10 @@ import (
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "/home")
+	render.RenderTemplate(w, "/home.page.tmpl")
 }
 
 // About is a function that returns the about page
 func About(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "/about")
+	render.RenderTemplate(w, "/about.page.tmpl")
 }
