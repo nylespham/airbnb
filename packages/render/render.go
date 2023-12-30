@@ -1,26 +1,49 @@
 package render
 
 import (
-	"fmt"
+	"bytes"
 	"html/template"
+	"log"
 	"net/http"
+	"nylespham/airbnb/packages/config"
+	"nylespham/airbnb/packages/models"
 	"path/filepath"
 )
 
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
-	const data = "nylespham"
-	filePrefix, _ := filepath.Abs("../../templates/")
-	parsedTemplate, err := template.ParseFiles(filePrefix+tmpl, filePrefix+"/base.layout.tmpl")
-	if err != nil {
-		fmt.Println("error parsing template:", err)
+var app *config.AppConfig
+
+func NewTemplate(a *config.AppConfig) {
+	app = a
+}
+
+func RenderTemplate(w http.ResponseWriter, tmpl string, td *models.TemplateData) {
+	var templateCache map[string]*template.Template
+	if app.UseCache {
+		templateCache = app.TemplateCache
+	} else {
+		templateCache, _ = CreateTemplateCache()
 	}
-	parsedTemplate.Execute(w, data)
+
+	template, ok := templateCache[tmpl]
+
+	if !ok {
+		log.Fatal("Could not get template from template cache")
+	}
+	buf := new(bytes.Buffer)
+
+	_ = template.Execute(buf, nil)
+
+	_, err := buf.WriteTo(w)
+
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func CreateTemplateCache() (map[string]*template.Template, error) {
 	myCache := map[string]*template.Template{}
 
-	pages, err := filepath.Glob("./templates/*.html")
+	pages, err := filepath.Glob("./templates/*.page.tmpl")
 	if err != nil {
 		return myCache, err
 	}
@@ -31,17 +54,17 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 		if err != nil {
 			return myCache, err
 		}
-		matches, err := filepath.Glob("./templates/*.layout.html")
+		matches, err := filepath.Glob("./templates/*.layout.tmpl")
 		if err != nil {
 			return myCache, err
 		}
 		if len(matches) > 0 {
-			ts, err := templateSet.ParseGlob("./templates/*.layout.html")
+			templateSet, err = templateSet.ParseGlob("./templates/*.layout.tmpl")
 			if err != nil {
 				return myCache, err
 			}
-			myCache[name] = ts
 		}
+		myCache[name] = templateSet
 
 	}
 	return myCache, nil
