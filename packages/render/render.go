@@ -5,9 +5,10 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"nylespham/airbnb/packages/config"
-	"nylespham/airbnb/packages/models"
 	"path/filepath"
+
+	"github.com/nylespham/airbnb/packages/config"
+	"github.com/nylespham/airbnb/packages/models"
 )
 
 var app *config.AppConfig

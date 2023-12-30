@@ -4,15 +4,32 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"nylespham/airbnb/packages/config"
-	"nylespham/airbnb/packages/handlers"
-	"nylespham/airbnb/packages/render"
+	"time"
+
+	"github.com/nylespham/airbnb/packages/config"
+	"github.com/nylespham/airbnb/packages/handlers"
+	"github.com/nylespham/airbnb/packages/render"
+
+	"github.com/alexedwards/scs/v2"
 )
 
 const port = ":8080"
 
+var app config.AppConfig
+var session *scs.SessionManager
+
 func main() {
-	var app config.AppConfig
+
+	app.InProduction = false
+
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.InProduction
+
+	app.Session = session
+
 	templateCache, err := render.CreateTemplateCache()
 
 	if err != nil {
@@ -25,8 +42,17 @@ func main() {
 	handlers.NewHandlers(repo)
 
 	render.NewTemplate(&app)
-	http.HandleFunc("/", handlers.Repo.Home)
-	http.HandleFunc("/about", handlers.Repo.About)
+
 	fmt.Println(fmt.Sprintf("Server is running on port %s", port))
-	_ = http.ListenAndServe(port, nil)
+
+	server := &http.Server{
+		Addr:    port,
+		Handler: routers(&app),
+	}
+
+	err = server.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }

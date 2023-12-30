@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	"nylespham/airbnb/packages/config"
-	"nylespham/airbnb/packages/models"
-	"nylespham/airbnb/packages/render"
+
+	"github.com/nylespham/airbnb/packages/config"
+	"github.com/nylespham/airbnb/packages/models"
+	"github.com/nylespham/airbnb/packages/render"
 )
 
 // Repo the repository used by the handlers
@@ -29,15 +30,19 @@ func NewHandlers(r *Repository) {
 
 // Home is a function that returns the home page
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
-	stringMap := make(map[string]string)
-	stringMap["test"] = "Hello, again."
+	remoteIp := r.RemoteAddr
+	m.App.Session.Put(r.Context(), "remote_ip", remoteIp)
 
-	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{
-		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{})
 }
 
 // About is a function that returns the about page
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "about.page.tmpl", &models.TemplateData{})
+	stringMap := make(map[string]string)
+
+	remoteIp := m.App.Session.GetString(r.Context(), "remote_ip")
+	stringMap["remote_ip"] = remoteIp
+	render.RenderTemplate(w, "about.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+	})
 }
